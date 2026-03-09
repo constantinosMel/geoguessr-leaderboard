@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoGuessr Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a2332;
+            --bg-card: #242d3d;
+            --accent: #6abe45;
+            --accent-gold: #ffd700;
+            --accent-silver: #c0c0c0;
+            --accent-bronze: #cd7f32;
+            --text-primary: #ffffff;
+            --text-secondary: #8b98a5;
+            --text-muted: #5c6b7a;
+            --danger: #f4212e;
+            --success: #00ba7c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at top, #1a2942 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, #15202b 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, #8bc34a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Winner Banner */
+        .winner-banner {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            border: 1px solid rgba(106, 190, 69, 0.2);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .winner-crown {
+            font-size: 3rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .winner-info h2 {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .winner-info .winner-name {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        .winner-info .winner-score {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Leaderboard Table */
+        .leaderboard {
+            width: 100%;
+        }
+
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 100px;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-card);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .leaderboard-row:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .leaderboard-row.top-1 {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .leaderboard-row.top-2 {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(192, 192, 192, 0.05) 100%);
+            border: 1px solid rgba(192, 192, 192, 0.3);
+        }
+
+        .leaderboard-row.top-3 {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.05) 100%);
+            border: 1px solid rgba(205, 127, 50, 0.3);
+        }
+
+        .rank {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .rank-1 { color: var(--accent-gold); }
+        .rank-2 { color: var(--accent-silver); }
+        .rank-3 { color: var(--accent-bronze); }
+
+        .player-name {
+            font-weight: 500;
+        }
+
+        .player-score {
+            font-weight: 600;
+            color: var(--accent);
+            text-align: right;
+        }
+
+        /* Add Player Form */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: #7cc954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 190, 69, 0.3);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-danger:hover {
+            background: rgba(244, 33, 46, 0.1);
+        }
+
+        /* Add Score Form */
+        .score-form {
+            display: grid;
+            grid-template-columns: 1fr 100px auto;
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        @media (max-width: 500px) {
+            .score-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .score-form .btn {
+            height: 46px;
+        }
+
+        /* Players List */
+        .players-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-card);
+        }
+
+        .player-item-name {
+            font-weight: 500;
+        }
+
+        /* Game History */
+        .game-history {
+            margin-top: 2rem;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid var(--accent);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .game-date {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .game-winner {
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .game-scores {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .game-scores span {
+            margin-right: 1rem;
+        }
+
+        /* Reset Button */
+        .reset-section {
+            margin-top: 2rem;
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--text-muted);
+        }
+
+        .btn-reset:hover {
+            background: rgba(244, 33, 46, 0.1);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-card);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🌍</div>
+            <h1>GeoGuessr Leaderboard</h1>
+            <p class="subtitle">Track your daily GeoGuessr games</p>
+        </header>
+
+        <div class="winner-banner" id="winnerBanner">
+            <div class="winner-crown">👑</div>
+            <div class="winner-info">
+                <h2>Current Leader</h2>
+                <div class="winner-name" id="winnerName">-</div>
+                <div class="winner-score" id="winnerScore">0 points</div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalGames">0</div>
+                <div class="stat-label">Games Played</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalPlayers">0</div>
+                <div class="stat-label">Players</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgScore">0</div>
+                <div class="stat-label">Avg Score</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Leaderboard -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🏆 Standings</h3>
+                </div>
+                <div class="leaderboard" id="leaderboard">
+                    <div class="empty-state">No players yet. Add some below!</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">➕ Add Score</h3>
+                </div>
+                <form class="score-form" id="scoreForm">
+                    <div class="form-group">
+                        <label>Select Player</label>
+                        <select class="form-input" id="playerSelect" required>
+                            <option value="">Choose player...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Points</label>
+                        <input type="number" class="form-input" id="scoreInput" placeholder="25000" required min="0">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.05);">
+
+                <div class="card-header">
+                    <h3 class="card-title">👥 Players</h3>
+                </div>
+                <div class="players-list" id="playersList"></div>
+
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.05);">
+
+                <div class="card-header">
+                    <h3 class="card-title">🎮 New Player</h3>
+                </div>
+                <form id="playerForm">
+                    <div class="form-group">
+                        <label>Player Name</label>
+                        <input type="text" class="form-input" id="playerNameInput" placeholder="Enter name..." required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Player</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Game History -->
+        <div class="game-history" id="gameHistory" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📜 Game History</h3>
+                </div>
+                <div id="gamesList"></div>
+            </div>
+        </div>
+
+        <div class="reset-section">
+            <button class="btn btn-reset" onclick="resetAll()">Reset Everything</button>
+        </div>
+
+        <footer class="footer">
+            <p>Data stored locally in your browser</p>
+        </footer>
+    </div>
+
+    <script>
+        // State
+        let state = {
+            players: [],
+            scores: [],
+            games: []
+        };
+
+        // Load from localStorage
+        function loadState() {
+            const saved = localStorage.getItem('geoguessrLeaderboard');
+            if (saved) {
+                state = JSON.parse(saved);
+            }
+        }
+
+        // Save to localStorage
+        function saveState() {
+            localStorage.setItem('geoguessrLeaderboard', JSON.stringify(state));
+        }
+
+        // Calculate total scores for each player
+        function getLeaderboard() {
+            const totals = {};
+            state.scores.forEach(s => {
+                totals[s.playerId] = (totals[s.playerId] || 0) + s.points;
+            });
+            
+            return state.players.map(p => ({
+                ...p,
+                totalScore: totals[p.id] || 0
+            })).sort((a, b) => b.totalScore - a.totalScore);
+        }
+
+        // Render leaderboard
+        function renderLeaderboard() {
+            const leaderboard = getLeaderboard();
+            const container = document.getElementById('leaderboard');
+            
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<div class="empty-state">No players yet. Add some below!</div>';
+                return;
+            }
+
+            container.innerHTML = leaderboard.map((player, index) => {
+                let rankClass = '';
+                let rankDisplay = index + 1;
+                
+                if (index === 0) rankClass = 'top-1';
+                else if (index === 1) rankClass = 'top-2';
+                else if (index === 2) rankClass = 'top-3';
+                
+                return `
+                    <div class="leaderboard-row ${rankClass}">
+                        <span class="rank rank-${rankDisplay}">${rankDisplay}</span>
+                        <span class="player-name">${player.name}</span>
+                        <span class="player-score">${player.totalScore.toLocaleString()}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Update winner banner
+            if (leaderboard.length > 0) {
+                document.getElementById('winnerName').textContent = leaderboard[0].name;
+                document.getElementById('winnerScore').textContent = `${leaderboard[0].totalScore.toLocaleString()} points`;
+            } else {
+                document.getElementById('winnerName').textContent = '-';
+                document.getElementById('winnerScore').textContent = '0 points';
+            }
+
+            // Update stats
+            document.getElementById('totalGames').textContent = state.games.length;
+            document.getElementById('totalPlayers').textContent = state.players.length;
+            
+            const avgScore = state.scores.length > 0 
+                ? Math.round(state.scores.reduce((sum, s) => sum + s.points, 0) / state.scores.length)
+                : 0;
+            document.getElementById('avgScore').textContent = avgScore.toLocaleString();
+        }
+
+        // Render player select and list
+        function renderPlayers() {
+            const select = document.getElementById('playerSelect');
+            const list = document.getElementById('playersList');
+            
+            // Update select
+            select.innerHTML = '<option value="">Choose player...</option>' + 
+                state.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+            // Update list
+            list.innerHTML = state.players.map(p => `
+                <div class="player-item">
+                    <span class="player-item-name">${p.name}</span>
+                    <button class="btn btn-danger" onclick="removePlayer('${p.id}')">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // Render game history
+        function renderGames() {
+            const container = document.getElementById('gameHistory');
+            const list = document.getElementById('gamesList');
+            
+            if (state.games.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            
+            const sortedGames = [...state.games].sort((a, b) => b.date - a.date);
+            
+            list.innerHTML = sortedGames.map(game => {
+                const gameScores = state.scores
+                    .filter(s => s.gameId === game.id)
+                    .sort((a, b) => b.points - a.points);
+                
+                const winner = gameScores.length > 0 
+                    ? state.players.find(p => p.id === gameScores[0].playerId)
+                    : null;
+
+                return `
+                    <div class="game-card">
+                        <div class="game-header">
+                            <span class="game-date">${new Date(game.date).toLocaleDateString('en-US', { 
+                                weekday: 'short', 
+                                month: 'short', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</span>
+                            ${winner ? `<span class="game-winner">👑 ${winner.name}</span>` : ''}
+                        </div>
+                        <div class="game-scores">
+                            ${gameScores.map(s => {
+                                const player = state.players.find(p => p.id === s.playerId);
+                                return `<span>${player?.name || 'Unknown'}: ${s.points.toLocaleString()}</span>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Add player
+        document.getElementById('playerForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('playerNameInput').value.trim();
+            if (!name) return;
+
+            const player = {
+                id: Date.now().toString(),
+                name: name
+            };
+
+            state.players.push(player);
+            saveState();
+            renderLeaderboard();
+            renderPlayers();
+            document.getElementById('playerNameInput').value = '';
+        });
+
+        // Add score
+        document.getElementById('scoreForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const playerId = document.getElementById('playerSelect').value;
+            const points = parseInt(document.getElementById('scoreInput').value);
+            
+            if (!playerId || isNaN(points) || points < 0) return;
+
+            // Create a new game if this is a new round
+            const gameId = Date.now().toString();
+            state.games.push({
+                id: gameId,
+                date: Date.now()
+            });
+
+            // Add score
+            state.scores.push({
+                id: Date.now().toString(),
+                gameId: gameId,
+                playerId: playerId,
+                points: points,
+                date: Date.now()
+            });
+
+            saveState();
+            renderLeaderboard();
+            renderGames();
+            document.getElementById('scoreInput').value = '';
+        });
+
+        // Remove player
+        function removePlayer(playerId) {
+            if (!confirm('Remove this player and all their scores?')) return;
+            
+            state.players = state.players.filter(p => p.id !== playerId);
+            state.scores = state.scores.filter(s => s.playerId !== playerId);
+            
+            saveState();
+            renderLeaderboard();
+            renderPlayers();
+            renderGames();
+        }
+
+        // Reset all
+        function resetAll() {
+            if (!confirm('Are you sure you want to reset everything? This cannot be undone!')) return;
+            
+            state = { players: [], scores: [], games: [] };
+            saveState();
+            renderLeaderboard();
+            renderPlayers();
+            renderGames();
+        }
+
+        // Initialize
+        loadState();
+        renderLeaderboard();
+        renderPlayers();
+        renderGames();
+    </script>
+</body>
+</html>
